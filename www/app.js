@@ -2,12 +2,19 @@
   'use strict';
 
   const SKILLS = Array.isArray(window.SKILLS) ? window.SKILLS : [];
+  const RES =
+    window.RESOURCES && Array.isArray(window.RESOURCES.resources)
+      ? window.RESOURCES
+      : { categories: {}, resources: [] };
+  const RESOURCES = RES.resources;
   const byId = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
+  const resById = Object.fromEntries(RESOURCES.map((r) => [r.id, r]));
 
   const PACKS = [
     { id: 'everyday', label: 'Everyday' },
     { id: 'dev', label: 'Dev' },
     { id: 'bonus', label: 'Bonus' },
+    { id: 'research', label: 'Research' },
   ];
 
   const CATS = {
@@ -29,11 +36,12 @@
     'networking-security': ['Networking and security', '🔒'],
     productivity: ['Productivity', '✅'],
   };
-  const catInfo = (id) => CATS[id] || [id.replace(/-/g, ' '), '📄'];
+  const catInfo = (id) => CATS[id] || RES.categories[id] || [id.replace(/-/g, ' '), '📄'];
 
   const NOTE_ID = /^(skill:[\w-]+|n\d+)$/;
   const MAX_NOTE = 20000;
   const MAX_TITLE = 120;
+  const RESEARCH_WARN = 'Delayed ang karamihan ng data at hindi ito real-time na signal. General information lang, hindi financial advice.';
 
   const view = document.getElementById('view');
   const toastEl = document.getElementById('toast');
@@ -184,10 +192,27 @@
     return `<a class="row" href="#/skill/${encodeURIComponent(s.id)}"><div class="row-top"><span class="row-name">${esc(s.name)}</span><span class="badge t-${esc(s.type)}">${esc(s.type)}</span></div><p>${esc(s.description)}</p></a>`;
   }
 
+  const host = (u) => u.replace(/^https:\/\//, '').replace(/\/$/, '');
+
+  function resRow(r) {
+    const href = /^https:\/\//.test(r.url) ? r.url : '#';
+    return `<a class="row" href="${esc(href)}" target="_blank" rel="noopener"><div class="row-top"><span class="row-name">${esc(r.name)}</span><span class="ext">↗</span></div><p>${esc(host(r.url))} · ${esc(r.desc)}</p></a>`;
+  }
+
   function section(title, ids, empty) {
     return `<section><h2 class="sec">${title}</h2>${
       ids.length ? ids.map((id) => row(byId[id])).join('') : `<p class="empty">${empty}</p>`
     }</section>`;
+  }
+
+  function packCats(pack) {
+    const m = {};
+    const bump = (c, k) => {
+      (m[c] = m[c] || { skills: 0, links: 0 })[k]++;
+    };
+    SKILLS.filter((s) => s.pack === pack).forEach((s) => bump(s.category, 'skills'));
+    RESOURCES.filter((r) => r.pack === pack).forEach((r) => bump(r.category, 'links'));
+    return m;
   }
 
   function viewHome() {
@@ -195,38 +220,48 @@
       view.innerHTML = '<header class="top"><h1>Skills hub</h1></header><p class="empty">Walang skills data. Patakbuhin ang tools/build-index.js bago mag-build.</p>';
       return;
     }
-    const counts = PACKS.map((p) => `${SKILLS.filter((s) => s.pack === p.id).length} ${p.label}`).join(' · ');
+    const counts = PACKS.map((p) => [p.label, SKILLS.filter((s) => s.pack === p.id).length])
+      .filter((x) => x[1] > 0)
+      .map((x) => `${x[1]} ${x[0]}`)
+      .join(' · ');
+    const links = RESOURCES.length ? ` · ${plural(RESOURCES.length, 'link')}` : '';
     view.innerHTML =
-      `<header class="top"><h1>Skills hub</h1><p class="sub">${plural(SKILLS.length, 'skill')} · ${esc(counts)}</p></header>` +
+      `<header class="top"><h1>Skills hub</h1><p class="sub">${plural(SKILLS.length, 'skill')} · ${esc(counts)}${links}</p></header>` +
       section('Pinned', pins, 'I-pin ang skill para lumabas dito.') +
       section('Recently opened', recent.slice(0, 5), 'Wala pang nabuksan.');
   }
 
   function viewBrowse(pack, cat) {
     if (pack && cat) return viewCategory(pack, cat);
-    const cats = {};
-    SKILLS.filter((s) => s.pack === browsePack).forEach((s) => {
-      cats[s.category] = (cats[s.category] || 0) + 1;
-    });
+    const cats = packCats(browsePack);
     const cards = Object.keys(cats)
-      .sort()
+      .sort((a, b) => catInfo(a)[0].localeCompare(catInfo(b)[0]))
       .map((c) => {
         const [label, icon] = catInfo(c);
-        return `<a class="card" href="#/browse/${browsePack}/${encodeURIComponent(c)}"><span class="ico">${icon}</span><b>${esc(label)}</b><small>${plural(cats[c], 'skill')}</small></a>`;
+        const parts = [];
+        if (cats[c].skills) parts.push(plural(cats[c].skills, browsePack === 'research' ? 'guide' : 'skill'));
+        if (cats[c].links) parts.push(plural(cats[c].links, 'link'));
+        return `<a class="card" href="#/browse/${browsePack}/${encodeURIComponent(c)}"><span class="ico">${icon}</span><b>${esc(label)}</b><small>${parts.join(' · ')}</small></a>`;
       })
       .join('');
     view.innerHTML =
       `<header class="top"><h1>Browse</h1></header>` +
       `<div class="seg">${PACKS.map((p) => `<button type="button" data-pack="${p.id}" class="${p.id === browsePack ? 'on' : ''}">${p.label}</button>`).join('')}</div>` +
-      `<div class="grid">${cards || '<p class="empty">Walang skills sa pack na ito.</p>'}</div>`;
+      `<div class="grid">${cards || '<p class="empty">Walang laman sa pack na ito.</p>'}</div>`;
   }
 
   function viewCategory(pack, cat) {
     const [label, icon] = catInfo(cat);
-    const list = SKILLS.filter((s) => s.pack === pack && s.category === cat);
-    view.innerHTML = `<header class="top"><a class="back" href="#/browse">← Browse</a><h1>${icon} ${esc(label)}</h1></header>${
-      list.length ? list.map((s) => row(s)).join('') : '<p class="empty">Walang skills dito.</p>'
-    }`;
+    const skills = SKILLS.filter((s) => s.pack === pack && s.category === cat);
+    const links = RESOURCES.filter((r) => r.pack === pack && r.category === cat);
+    let html = `<header class="top"><a class="back" href="#/browse">← Browse</a><h1>${icon} ${esc(label)}</h1></header>`;
+    if (pack === 'research') html += `<p class="warn">${RESEARCH_WARN}</p>`;
+    if (skills.length) {
+      html += (links.length ? '<h2 class="sec">Guides</h2>' : '') + skills.map((s) => row(s)).join('');
+    }
+    if (links.length) html += '<h2 class="sec">Links</h2>' + links.map((r) => resRow(r)).join('');
+    if (!skills.length && !links.length) html += '<p class="empty">Walang laman dito.</p>';
+    view.innerHTML = html;
   }
 
   function viewSaved() {
@@ -238,22 +273,27 @@
   }
 
   const hay = (s) => [s.name, s.id, s.description, s.category, s.tags.join(' ')].join(' ').toLowerCase();
+  const resHay = (r) =>
+    [r.name, r.id, r.url, r.desc, catInfo(r.category)[0], (r.tags || []).join(' ')].join(' ').toLowerCase();
 
   function renderResults() {
     const terms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    const list = SKILLS.filter(
-      (s) => (searchPack === 'all' || s.pack === searchPack) && terms.every((t) => hay(s).includes(t))
-    );
-    document.getElementById('results').innerHTML = list.length
-      ? list.map((s) => row(s)).join('')
-      : '<p class="empty">Walang nahanap.</p>';
+    const inPack = (p) => searchPack === 'all' || p === searchPack;
+    const sk = SKILLS.filter((s) => inPack(s.pack) && terms.every((t) => hay(s).includes(t)));
+    const showLinks = terms.length > 0 || searchPack === 'research';
+    const rs = showLinks
+      ? RESOURCES.filter((r) => inPack(r.pack) && terms.every((t) => resHay(r).includes(t)))
+      : [];
+    let html = sk.map((s) => row(s)).join('');
+    if (rs.length) html += '<h2 class="sec">Links</h2>' + rs.map((r) => resRow(r)).join('');
+    document.getElementById('results').innerHTML = html || '<p class="empty">Walang nahanap.</p>';
   }
 
   function viewSearch() {
     const chips = [{ id: 'all', label: 'All' }, ...PACKS];
     view.innerHTML =
       `<header class="top"><h1>Search</h1></header>` +
-      `<input id="q" class="search" type="search" placeholder="Search skills" value="${esc(searchQuery)}" autocomplete="off">` +
+      `<input id="q" class="search" type="search" placeholder="Search skills at links" value="${esc(searchQuery)}" autocomplete="off">` +
       `<div class="chips">${chips.map((p) => `<button type="button" data-spack="${p.id}" class="${p.id === searchPack ? 'on' : ''}">${p.label}</button>`).join('')}</div>` +
       `<div id="results"></div>`;
     renderResults();
@@ -284,11 +324,13 @@
     store.set('sh.recent', recent);
     const vars = s.type === 'prompt' ? [...new Set([...s.body.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))] : [];
     const rel = s.related.filter((r) => byId[r]);
+    const linked = (s.resources || []).map((rid) => resById[rid]).filter(Boolean);
     const pinned = pins.includes(id);
     view.innerHTML =
       `<header class="top"><button type="button" class="back" data-act="back">← Back</button><h1>${esc(s.name)}</h1>` +
       `<p class="sub">${esc(catInfo(s.category)[0])} · <span class="badge t-${esc(s.type)}">${esc(s.type)}</span> · v${esc(s.version)}</p></header>` +
       `<p class="desc">${esc(s.description)}</p>` +
+      (s.pack === 'research' ? `<p class="warn">${RESEARCH_WARN}</p>` : '') +
       `<div class="actions"><button type="button" data-act="copy">Copy</button><button type="button" data-act="share">Share</button><button type="button" data-act="pin" class="${pinned ? 'on' : ''}">${pinned ? 'Pinned' : 'Pin'}</button></div>` +
       `<div class="progress" id="prog"><div class="bar"><i id="progfill"></i></div><span id="progtxt"></span><button type="button" data-act="reset">Reset</button></div>` +
       (vars.length
@@ -296,6 +338,7 @@
         : '') +
       `<article class="md">${render(s.body, id)}</article>` +
       `<div class="note"><p class="sec">My note</p><textarea id="skillnote" class="bigarea" rows="3" placeholder="Sariling note para sa skill na ito"></textarea><small id="notestate"></small></div>` +
+      (linked.length ? `<section><h2 class="sec">Links</h2>${linked.map((r) => resRow(r)).join('')}</section>` : '') +
       (rel.length ? `<section><h2 class="sec">Related</h2>${rel.map((r) => row(byId[r])).join('')}</section>` : '');
     const saved = notes['skill:' + id];
     document.getElementById('skillnote').value = saved ? saved.text : '';
