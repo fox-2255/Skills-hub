@@ -1,0 +1,39 @@
+{
+  "pack": "everyday",
+  "categories": {
+    "home-repair": ["Home repair", "🔧"],
+    "diy-woodworking": ["DIY and woodworking", "🪚"],
+    "home-design": ["Home design and decor", "🛋️"],
+    "calculators": ["Calculators and converters", "🧮"],
+    "energy-recycling": ["Energy and recycling", "♻️"],
+    "smart-shopping": ["Smart shopping", "🛒"]
+  },
+  "resources": [
+    {"id":"ifixit","name":"iFixit","url":"https://ifixit.com","category":"home-repair","desc":"Repair any device yourself","tags":["repair","devices"]},
+    {"id":"manualslib","name":"ManualsLib","url":"https://manualslib.com","category":"home-repair","desc":"User manuals for every device","tags":["manuals"]},
+    {"id":"partselect","name":"PartSelect","url":"https://partselect.com","category":"home-repair","desc":"Spare parts and repair schematics","tags":["parts","appliances"]},
+    {"id":"repairclinic","name":"RepairClinic","url":"https://repairclinic.com","category":"home-repair","desc":"Appliance fault diagnosis","tags":["appliances","diagnosis"]},
+    {"id":"family-handyman","name":"Family Handyman","url":"https://familyhandyman.com","category":"home-repair","desc":"Home repair guides","tags":["repair","diy"]},
+    {"id":"this-old-house","name":"This Old House","url":"https://thisoldhouse.com","category":"home-repair","desc":"Renovation and maintenance manuals","tags":["renovation","maintenance"]},
+    {"id":"instructables","name":"Instructables","url":"https://instructables.com","category":"diy-woodworking","desc":"Handmade project archive","tags":["diy","projects"]},
+    {"id":"sawshub","name":"SawsHub","url":"https://sawshub.com","category":"diy-woodworking","desc":"Woodworking basics","tags":["woodworking"]},
+    {"id":"wood-magazine","name":"WOOD Magazine","url":"https://woodmagazine.com","category":"diy-woodworking","desc":"Free furniture plans","tags":["woodworking","plans"]},
+    {"id":"ana-white","name":"Ana White","url":"https://ana-white.com","category":"diy-woodworking","desc":"Homemade furniture plans","tags":["furniture","plans"]},
+    {"id":"sketchup","name":"SketchUp","url":"https://sketchup.com","category":"home-design","desc":"Free 3D home design","tags":["3d","design"]},
+    {"id":"planner-5d","name":"Planner 5D","url":"https://planner5d.com","category":"home-design","desc":"Room layout planning","tags":["layout","rooms"]},
+    {"id":"roomstyler","name":"Roomstyler","url":"https://roomstyler.com","category":"home-design","desc":"Furniture placement trials","tags":["furniture","rooms"]},
+    {"id":"coolors","name":"Coolors","url":"https://coolors.co","category":"home-design","desc":"Wall color palette selection","tags":["colors","palette"]},
+    {"id":"houzz","name":"Houzz","url":"https://houzz.com","category":"home-design","desc":"Decoration ideas archive","tags":["decor","ideas"]},
+    {"id":"rmsgb","name":"RMSGB","url":"https://rmsgb.com","category":"calculators","desc":"Measurements and conversion tables","tags":["measurements","conversion"]},
+    {"id":"omni-calculator","name":"Omni Calculator","url":"https://omnicalculator.com","category":"calculators","desc":"Calculator for every topic","tags":["calculator"]},
+    {"id":"calculator-net","name":"Calculator.net","url":"https://calculator.net","category":"calculators","desc":"Credit and interest calculations","tags":["credit","interest"]},
+    {"id":"energy-star","name":"ENERGY STAR","url":"https://energystar.gov","category":"energy-recycling","desc":"Real energy consumption of devices","tags":["energy","appliances"]},
+    {"id":"topten","name":"Topten","url":"https://topten.eu","category":"energy-recycling","desc":"Lists of the most efficient appliances","tags":["efficiency","appliances"]},
+    {"id":"recyclenow","name":"Recycle Now","url":"https://recyclenow.com","category":"energy-recycling","desc":"How to recycle what","tags":["recycling"]},
+    {"id":"consumer-reports","name":"Consumer Reports","url":"https://consumerreports.org","category":"smart-shopping","desc":"Product test results","tags":["reviews","tests"]},
+    {"id":"rtings","name":"RTINGS","url":"https://rtings.com","category":"smart-shopping","desc":"Detailed tests of electronics","tags":["electronics","tests"]},
+    {"id":"versus","name":"Versus","url":"https://versus.com","category":"smart-shopping","desc":"Side-by-side product comparison","tags":["compare","products"]},
+    {"id":"camelcamelcamel","name":"CamelCamelCamel","url":"https://camelcamelcamel.com","category":"smart-shopping","desc":"Historical price charts for products","tags":["prices","history"]},
+    {"id":"alternativeto","name":"AlternativeTo","url":"https://alternativeto.net","category":"smart-shopping","desc":"Free alternatives to paid software","tags":["software","free"]}
+  ]
+}
